@@ -1,6 +1,6 @@
 # @tanebijs/protobuf
 
-This package is the Protobuf infrastructure for [`tanebi`](https://github.com/tanebijs/tanebi), which provides efficient serialization and deserialization of protocol packets.
+This package is the Protobuf infrastructure for [`tanebi`](https://github.com/SaltifyDev/tanebi), which provides efficient serialization and deserialization of protocol packets.
 
 ## Efficiency
 
