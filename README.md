@@ -2,6 +2,8 @@
 
 Fast, code-first protobuf serialization library for TypeScript.
 
+**Important: The library uses `Buffer` API, which is only available in Node.js and recent versions of Deno. It is not compatible with browser environments.**
+
 ## Usage
 
 The DSL is inspired by [`@napneko/nap-proto-core`](https://npmjs.com/package/@napneko/nap-proto-core), which uses `@protobuf-ts/runtime` as the backend. The DSL describes the model in an elegant way and is still valid TypeScript code, and can be used directly for type inference. This package fully adopted this style of model representation.
