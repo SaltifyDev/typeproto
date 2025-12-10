@@ -94,27 +94,27 @@ const ScalarTypeToWireType: {
     sint64: WireType.Varint,
 };
 
+// Signature overloads, for better IntelliSense experience
 export function ProtoField<T extends ProtoFieldType>(
     fieldNumber: number,
     type: T,
     optional?: false,
     repeated?: false,
-    packed?: boolean
 ): ProtoSpec<T, false, false>;
 export function ProtoField<T extends ProtoFieldType>(
     fieldNumber: number,
     type: T,
     optional: true,
-    repeated?: false,
-    packed?: boolean
+    repeated?: false, // repeated must be false if optional is true
 ): ProtoSpec<T, true, false>;
 export function ProtoField<T extends ProtoFieldType>(
     fieldNumber: number,
     type: T,
-    optional: false,
+    optional: false, // optional must be false if repeated is true
     repeated: true,
     packed?: boolean
 ): ProtoSpec<T, false, true>;
+
 export function ProtoField<T extends ProtoFieldType>(
     fieldNumber: number,
     type: T,
