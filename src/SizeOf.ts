@@ -3,23 +3,82 @@ import { Converter } from './Converter';
 import { kTagLength, ProtoFieldType, ProtoSpec } from './ProtoField';
 import { ScalarType } from './ScalarType';
 
+const VARINT32_BYTE_2 = 0x80;
+const VARINT32_BYTE_3 = 0x4000;
+const VARINT32_BYTE_4 = 0x200000;
+const VARINT32_BYTE_5 = 0x10000000;
+
+const VARINT64_BYTE_2 = BigInt(1) << BigInt(7);
+const VARINT64_BYTE_3 = BigInt(1) << BigInt(14);
+const VARINT64_BYTE_4 = BigInt(1) << BigInt(21);
+const VARINT64_BYTE_5 = BigInt(1) << BigInt(28);
+const VARINT64_BYTE_6 = BigInt(1) << BigInt(35);
+const VARINT64_BYTE_7 = BigInt(1) << BigInt(42);
+const VARINT64_BYTE_8 = BigInt(1) << BigInt(49);
+const VARINT64_BYTE_9 = BigInt(1) << BigInt(56);
+const VARINT64_BYTE_10 = BigInt(1) << BigInt(63);
+
+type NumberMapper = (value: number) => number;
+type BigintMapper = (value: bigint) => bigint;
+
+function sumVarint32Array(data: readonly number[], mapper?: NumberMapper): number {
+    let total = 0;
+    if (mapper) {
+        for (let i = 0; i < data.length; i++) {
+            total += SizeOf.varint32(mapper(data[i]));
+        }
+    } else {
+        for (let i = 0; i < data.length; i++) {
+            total += SizeOf.varint32(data[i]);
+        }
+    }
+    return total;
+}
+
+function sumVarint64Array(data: readonly bigint[], mapper?: BigintMapper): number {
+    let total = 0;
+    if (mapper) {
+        for (let i = 0; i < data.length; i++) {
+            total += SizeOf.varint64(mapper(data[i]));
+        }
+    } else {
+        for (let i = 0; i < data.length; i++) {
+            total += SizeOf.varint64(data[i]);
+        }
+    }
+    return total;
+}
+
+function sumLengthDelimited<T>(data: readonly T[], sizeOfItem: (item: T) => number): number {
+    let total = 0;
+    for (let i = 0; i < data.length; i++) {
+        const itemSize = sizeOfItem(data[i]);
+        total += SizeOf.varint32(itemSize) + itemSize;
+    }
+    return total;
+}
+
 export class SizeOf {
     static varint32(value: number): number {
-        let size = 1;
-        while (value > 0x7f) {
-            size++;
-            value >>>= 7;
-        }
-        return size;
+        value >>>= 0;
+        if (value < VARINT32_BYTE_2) return 1;
+        if (value < VARINT32_BYTE_3) return 2;
+        if (value < VARINT32_BYTE_4) return 3;
+        if (value < VARINT32_BYTE_5) return 4;
+        return 5;
     }
 
     static varint64(value: bigint): number {
-        let size = 1;
-        while (value > BigInt(0x7f)) {
-            size++;
-            value >>= BigInt(7);
-        }
-        return size;
+        if (value < VARINT64_BYTE_2) return 1;
+        if (value < VARINT64_BYTE_3) return 2;
+        if (value < VARINT64_BYTE_4) return 3;
+        if (value < VARINT64_BYTE_5) return 4;
+        if (value < VARINT64_BYTE_6) return 5;
+        if (value < VARINT64_BYTE_7) return 6;
+        if (value < VARINT64_BYTE_8) return 7;
+        if (value < VARINT64_BYTE_9) return 8;
+        if (value < VARINT64_BYTE_10) return 9;
+        return 10;
     }
 }
 
@@ -50,37 +109,34 @@ export const ScalarSizeCalculatorCompiler: {
     int64: (spec) => spec.repeated ?
         spec.packed
             ? (data: bigint[], cache) => {
-                const bodySize = data.reduce((acc, item) => acc + SizeOf.varint64(Converter.toUnsigned64(item)), 0);
+                const bodySize = sumVarint64Array(data, Converter.toUnsigned64);
                 cache.set(data, bodySize);
                 return spec[kTagLength] + SizeOf.varint32(bodySize) + bodySize;
             }
             : (data: bigint[]) =>
-                data.reduce((acc, item) => acc + SizeOf.varint64(Converter.toUnsigned64(item)), 0)
-                + spec[kTagLength] * data.length
+                sumVarint64Array(data, Converter.toUnsigned64) + spec[kTagLength] * data.length
         : (data: bigint) => spec[kTagLength] + SizeOf.varint64(Converter.toUnsigned64(data)),
 
     uint64: (spec) => spec.repeated ?
         spec.packed
             ? (data: bigint[], cache) => {
-                const bodySize = data.reduce((acc, item) => acc + SizeOf.varint64(item), 0);
+                const bodySize = sumVarint64Array(data);
                 cache.set(data, bodySize);
                 return spec[kTagLength] + SizeOf.varint32(bodySize) + bodySize;
             }
             : (data: bigint[]) =>
-                data.reduce((acc, item) => acc + SizeOf.varint64(item), 0)
-                + spec[kTagLength] * data.length
+                sumVarint64Array(data) + spec[kTagLength] * data.length
         : (data: bigint) => spec[kTagLength] + SizeOf.varint64(data),
 
     int32: (spec) => spec.repeated ?
         spec.packed
             ? (data: number[], cache) => {
-                const bodySize = data.reduce((acc, item) => acc + SizeOf.varint32(Converter.toUnsigned32(item)), 0);
+                const bodySize = sumVarint32Array(data, Converter.toUnsigned32);
                 cache.set(data, bodySize);
                 return spec[kTagLength] + SizeOf.varint32(bodySize) + bodySize;
             }
             : (data: number[]) =>
-                data.reduce((acc, item) => acc + SizeOf.varint32(Converter.toUnsigned32(item)), 0)
-                + spec[kTagLength] * data.length
+                sumVarint32Array(data, Converter.toUnsigned32) + spec[kTagLength] * data.length
         : (data: number) => spec[kTagLength] + SizeOf.varint32(Converter.toUnsigned32(data)),
 
     fixed64: (spec) => spec.repeated ?
@@ -112,11 +168,7 @@ export const ScalarSizeCalculatorCompiler: {
 
     string: (spec) => spec.repeated
         ? (data: string[]) => {
-            const totalSize = data.reduce((acc, item) => {
-                const itemSize = Buffer.byteLength(item);
-                return acc + SizeOf.varint32(itemSize) + itemSize;
-            }, 0);
-            return totalSize + spec[kTagLength] * data.length;
+            return sumLengthDelimited(data, (item) => Buffer.byteLength(item)) + spec[kTagLength] * data.length;
         }
         : (data: string) => {
             const itemSize = Buffer.byteLength(data);
@@ -125,11 +177,7 @@ export const ScalarSizeCalculatorCompiler: {
 
     bytes: (spec) => spec.repeated
         ? (data: Buffer[]) => {
-            const totalSize = data.reduce((acc, item) => {
-                const itemSize = item.length;
-                return acc + SizeOf.varint32(itemSize) + itemSize;
-            }, 0);
-            return totalSize + spec[kTagLength] * data.length;
+            return sumLengthDelimited(data, (item) => item.length) + spec[kTagLength] * data.length;
         }
         : (data: Buffer) => {
             const itemSize = data.length;
@@ -139,13 +187,12 @@ export const ScalarSizeCalculatorCompiler: {
     uint32: (spec) => spec.repeated ?
         spec.packed
             ? (data: number[], cache) => {
-                const bodySize = data.reduce((acc, item) => acc + SizeOf.varint32(item), 0);
+                const bodySize = sumVarint32Array(data);
                 cache.set(data, bodySize);
                 return spec[kTagLength] + SizeOf.varint32(bodySize) + bodySize;
             }
             : (data: number[]) =>
-                data.reduce((acc, item) => acc + SizeOf.varint32(item), 0)
-                + spec[kTagLength] * data.length
+                sumVarint32Array(data) + spec[kTagLength] * data.length
         : (data: number) => spec[kTagLength] + SizeOf.varint32(data),
 
     sfixed32: (spec) => spec.repeated ?
@@ -169,24 +216,22 @@ export const ScalarSizeCalculatorCompiler: {
     sint32: (spec) => spec.repeated ?
         spec.packed
             ? (data: number[], cache) => {
-                const bodySize = data.reduce((acc, item) => acc + SizeOf.varint32(Converter.zigzagEncode32(item)), 0);
+                const bodySize = sumVarint32Array(data, Converter.zigzagEncode32);
                 cache.set(data, bodySize);
                 return spec[kTagLength] + SizeOf.varint32(bodySize) + bodySize;
             }
             : (data: number[]) =>
-                data.reduce((acc, item) => acc + SizeOf.varint32(Converter.zigzagEncode32(item)), 0)
-                + spec[kTagLength] * data.length
+                sumVarint32Array(data, Converter.zigzagEncode32) + spec[kTagLength] * data.length
         : (data) => spec[kTagLength] + SizeOf.varint32(Converter.zigzagEncode32(data)),
 
     sint64: (spec) => spec.repeated ?
         spec.packed
             ? (data: bigint[], cache) => {
-                const bodySize = data.reduce((acc, item) => acc + SizeOf.varint64(Converter.zigzagEncode64(item)), 0);
+                const bodySize = sumVarint64Array(data, Converter.zigzagEncode64);
                 cache.set(data, bodySize);
                 return spec[kTagLength] + SizeOf.varint32(bodySize) + bodySize;
             }
             : (data: bigint[]) =>
-                data.reduce((acc, item) => acc + SizeOf.varint64(Converter.zigzagEncode64(item)), 0)
-                + spec[kTagLength] * data.length
+                sumVarint64Array(data, Converter.zigzagEncode64) + spec[kTagLength] * data.length
         : (data: bigint) => spec[kTagLength] + SizeOf.varint64(Converter.zigzagEncode64(data)),
 };
