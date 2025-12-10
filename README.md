@@ -60,7 +60,7 @@ const encoded = TestMessage.encode({
 const decoded = TestMessage.decode(encoded);
 ```
 
-## Efficiency
+## Performance
 
 `@saltify/typeproto` is **3x faster** than unoptimized `@protobuf-ts/runtime` when serializing 100000 same messages in a row, and **1.4x faster** when deserializing, according to the benchmark test.
 
