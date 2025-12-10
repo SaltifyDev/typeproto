@@ -51,42 +51,47 @@ export type InferProtoSpecInput<Spec> = Spec extends ProtoSpec<infer T, infer O,
     : never;
 
 export type ScalarTypeToTsType<T extends ScalarType> = T extends
-    | ScalarType.DOUBLE
-    | ScalarType.FLOAT
-    | ScalarType.INT32
-    | ScalarType.FIXED32
-    | ScalarType.UINT32
-    | ScalarType.SFIXED32
-    | ScalarType.SINT32
+    | 'double'
+    | 'float'
+    | 'int32'
+    | 'fixed32'
+    | 'uint32'
+    | 'sfixed32'
+    | 'sint32'
     ? number
-    : T extends ScalarType.INT64 | ScalarType.UINT64 | ScalarType.FIXED64 | ScalarType.SFIXED64 | ScalarType.SINT64
+    : T extends
+    | 'int64'
+    | 'uint64'
+    | 'fixed64'
+    | 'sfixed64'
+    | 'sint64'
     ? bigint
-    : T extends ScalarType.BOOL
+    : T extends 'bool'
     ? boolean
-    : T extends ScalarType.STRING
+    : T extends 'string'
     ? string
-    : T extends ScalarType.BYTES
+    : T extends 'bytes'
     ? Buffer
     : never;
 
 const ScalarTypeToWireType: {
     [K in ScalarType]: WireType;
 } = {
-    [ScalarType.DOUBLE]: WireType.Fixed64,
-    [ScalarType.FLOAT]: WireType.Fixed32,
-    [ScalarType.INT64]: WireType.Varint,
-    [ScalarType.UINT64]: WireType.Varint,
-    [ScalarType.INT32]: WireType.Varint,
-    [ScalarType.FIXED64]: WireType.Fixed64,
-    [ScalarType.FIXED32]: WireType.Fixed32,
-    [ScalarType.BOOL]: WireType.Varint,
-    [ScalarType.STRING]: WireType.LengthDelimited,
-    [ScalarType.BYTES]: WireType.LengthDelimited,
-    [ScalarType.UINT32]: WireType.Varint,
-    [ScalarType.SFIXED32]: WireType.Fixed32,
-    [ScalarType.SFIXED64]: WireType.Fixed64,
-    [ScalarType.SINT32]: WireType.Varint,
-    [ScalarType.SINT64]: WireType.Varint,
+    double: WireType.Fixed64,
+    float: WireType.Fixed32,
+    int64: WireType.Varint,
+    uint64: WireType.Varint,
+    int32: WireType.Varint,
+    fixed64: WireType.Fixed64,
+    fixed32: WireType.Fixed32,
+    bool: WireType.Varint,
+    string: WireType.LengthDelimited,
+    bytes: WireType.LengthDelimited,
+    uint32: WireType.Varint,
+    sfixed32: WireType.Fixed32,
+    sfixed64: WireType.Fixed64,
+    sint32: WireType.Varint,
+    sint64: WireType.Varint,
 };
 
 export function ProtoField<T extends ProtoFieldType>(

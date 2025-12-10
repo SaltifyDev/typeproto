@@ -1,25 +1,30 @@
 {
-  "name": "@tanebijs/protobuf",
-  "version": "0.0.1",
-  "description": "Fast Protobuf infrastructure for tanebi",
+  "name": "@saltify/typeproto",
+  "version": "0.1.0",
+  "description": "Fast, code-first protobuf serialization library for TypeScript",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tanebijs/protobuf.git"
+    "url": "git+https://github.com/SaltifyDev/typeproto.git"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "main": "dist/index.js",
   "scripts": {
     "build": "tsup",
     "prepack": "npm run build"
   },
-  "keywords": ["protobuf"],
+  "keywords": [
+    "protobuf"
+  ],
   "author": "Young",
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^20.17.30",
-    "tsup": "^8.4.0",
-    "typescript": "^5.8.3"
+    "@types/node": "^22.19.2",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

@@ -29,7 +29,7 @@ export type SizeCalculator = (data: any, cache: WeakMap<object, number>) => numb
 export const ScalarSizeCalculatorCompiler: {
     [K in ScalarType]: (spec: ProtoSpec<ProtoFieldType, boolean, boolean>) => SizeCalculator;
 } = {
-    [ScalarType.DOUBLE]: (spec) => spec.repeated ?
+    double: (spec) => spec.repeated ?
         spec.packed
             ? (data: number[]) => {
                 const bodySize = data.length * DoubleSize;
@@ -38,7 +38,7 @@ export const ScalarSizeCalculatorCompiler: {
             : (data: number[]) => data.length * (DoubleSize + spec[kTagLength]) 
         : () => spec[kTagLength] + DoubleSize,
 
-    [ScalarType.FLOAT]: (spec) => spec.repeated ?
+    float: (spec) => spec.repeated ?
         spec.packed
             ? (data: number[]) => {
                 const bodySize = data.length * FloatSize;
@@ -47,7 +47,7 @@ export const ScalarSizeCalculatorCompiler: {
             : (data: number[]) => data.length * (FloatSize + spec[kTagLength])
         : () => spec[kTagLength] + FloatSize,
 
-    [ScalarType.INT64]: (spec) => spec.repeated ?
+    int64: (spec) => spec.repeated ?
         spec.packed
             ? (data: bigint[], cache) => {
                 const bodySize = data.reduce((acc, item) => acc + SizeOf.varint64(Converter.toUnsigned64(item)), 0);
@@ -59,7 +59,7 @@ export const ScalarSizeCalculatorCompiler: {
                 + spec[kTagLength] * data.length
         : (data: bigint) => spec[kTagLength] + SizeOf.varint64(Converter.toUnsigned64(data)),
 
-    [ScalarType.UINT64]: (spec) => spec.repeated ?
+    uint64: (spec) => spec.repeated ?
         spec.packed
             ? (data: bigint[], cache) => {
                 const bodySize = data.reduce((acc, item) => acc + SizeOf.varint64(item), 0);
@@ -71,7 +71,7 @@ export const ScalarSizeCalculatorCompiler: {
                 + spec[kTagLength] * data.length
         : (data: bigint) => spec[kTagLength] + SizeOf.varint64(data),
 
-    [ScalarType.INT32]: (spec) => spec.repeated ?
+    int32: (spec) => spec.repeated ?
         spec.packed
             ? (data: number[], cache) => {
                 const bodySize = data.reduce((acc, item) => acc + SizeOf.varint32(Converter.toUnsigned32(item)), 0);
@@ -83,7 +83,7 @@ export const ScalarSizeCalculatorCompiler: {
                 + spec[kTagLength] * data.length
         : (data: number) => spec[kTagLength] + SizeOf.varint32(Converter.toUnsigned32(data)),
 
-    [ScalarType.FIXED64]: (spec) => spec.repeated ?
+    fixed64: (spec) => spec.repeated ?
         spec.packed
             ? (data: bigint[]) => {
                 const bodySize = data.length * Fixed64Size;
@@ -92,7 +92,7 @@ export const ScalarSizeCalculatorCompiler: {
             : (data: bigint[]) => data.length * (Fixed64Size + spec[kTagLength])
         : () => spec[kTagLength] + Fixed64Size,
 
-    [ScalarType.FIXED32]: (spec) => spec.repeated ?
+    fixed32: (spec) => spec.repeated ?
         spec.packed
             ? (data: number[]) => {
                 const bodySize = data.length * Fixed32Size;
@@ -101,7 +101,7 @@ export const ScalarSizeCalculatorCompiler: {
             : (data: number[]) => data.length * (Fixed32Size + spec[kTagLength])
         : () => spec[kTagLength] + Fixed32Size,
 
-    [ScalarType.BOOL]: (spec) => spec.repeated ?
+    bool: (spec) => spec.repeated ?
         spec.packed
             ? (data: boolean[]) => {
                 const bodySize = data.length;
@@ -110,7 +110,7 @@ export const ScalarSizeCalculatorCompiler: {
             : (data: boolean[]) => data.length * (1 + spec[kTagLength])
         : () => spec[kTagLength] + 1,
 
-    [ScalarType.STRING]: (spec) => spec.repeated
+    string: (spec) => spec.repeated
         ? (data: string[]) => {
             const totalSize = data.reduce((acc, item) => {
                 const itemSize = Buffer.byteLength(item);
@@ -123,7 +123,7 @@ export const ScalarSizeCalculatorCompiler: {
             return spec[kTagLength] + SizeOf.varint32(itemSize) + itemSize;
         },
 
-    [ScalarType.BYTES]: (spec) => spec.repeated
+    bytes: (spec) => spec.repeated
         ? (data: Buffer[]) => {
             const totalSize = data.reduce((acc, item) => {
                 const itemSize = item.length;
@@ -136,7 +136,7 @@ export const ScalarSizeCalculatorCompiler: {
             return spec[kTagLength] + SizeOf.varint32(itemSize) + itemSize;
         },
 
-    [ScalarType.UINT32]: (spec) => spec.repeated ?
+    uint32: (spec) => spec.repeated ?
         spec.packed
             ? (data: number[], cache) => {
                 const bodySize = data.reduce((acc, item) => acc + SizeOf.varint32(item), 0);
@@ -148,7 +148,7 @@ export const ScalarSizeCalculatorCompiler: {
                 + spec[kTagLength] * data.length
         : (data: number) => spec[kTagLength] + SizeOf.varint32(data),
 
-    [ScalarType.SFIXED32]: (spec) => spec.repeated ?
+    sfixed32: (spec) => spec.repeated ?
         spec.packed
             ? (data: number[]) => {
                 const bodySize = data.length * Fixed32Size;
@@ -157,7 +157,7 @@ export const ScalarSizeCalculatorCompiler: {
             : (data: number[]) => data.length * (Fixed32Size + spec[kTagLength])
         : () => spec[kTagLength] + Fixed32Size,
     
-    [ScalarType.SFIXED64]: (spec) => spec.repeated ?
+    sfixed64: (spec) => spec.repeated ?
         spec.packed
             ? (data: bigint[]) => {
                 const bodySize = data.length * Fixed64Size;
@@ -166,7 +166,7 @@ export const ScalarSizeCalculatorCompiler: {
             : (data: bigint[]) => data.length * (Fixed64Size + spec[kTagLength])
         : () => spec[kTagLength] + Fixed64Size,
 
-    [ScalarType.SINT32]: (spec) => spec.repeated ?
+    sint32: (spec) => spec.repeated ?
         spec.packed
             ? (data: number[], cache) => {
                 const bodySize = data.reduce((acc, item) => acc + SizeOf.varint32(Converter.zigzagEncode32(item)), 0);
@@ -178,7 +178,7 @@ export const ScalarSizeCalculatorCompiler: {
                 + spec[kTagLength] * data.length
         : (data) => spec[kTagLength] + SizeOf.varint32(Converter.zigzagEncode32(data)),
 
-    [ScalarType.SINT64]: (spec) => spec.repeated ?
+    sint64: (spec) => spec.repeated ?
         spec.packed
             ? (data: bigint[], cache) => {
                 const bodySize = data.reduce((acc, item) => acc + SizeOf.varint64(Converter.zigzagEncode64(item)), 0);

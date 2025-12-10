@@ -19,7 +19,7 @@ function defineSerializer<T>(s: ProtoSerializer<T>): ProtoSerializer<T> {
 export const ScalarSerializerCompiler: {
     [K in ScalarType]: (spec: ProtoSpec<ProtoFieldType, boolean, boolean>) => ProtoSerializer<any>;
 } = {
-    [ScalarType.DOUBLE]: (spec) => spec.repeated ?
+    double: (spec) => spec.repeated ?
         spec.packed 
             ? defineSerializer<number[]>((data, writer) => {
                 const length = data.length * DoubleSize;
@@ -40,7 +40,7 @@ export const ScalarSerializerCompiler: {
             writer.writeDouble(data);
         }),
     
-    [ScalarType.FLOAT]: (spec) => spec.repeated ?
+    float: (spec) => spec.repeated ?
         spec.packed 
             ? defineSerializer<number[]>((data, writer) => {
                 const length = data.length * FloatSize;
@@ -61,7 +61,7 @@ export const ScalarSerializerCompiler: {
             writer.writeFloat(data);
         }),
 
-    [ScalarType.INT64]: (spec) => spec.repeated ?
+    int64: (spec) => spec.repeated ?
         spec.packed 
             ? defineSerializer<bigint[]>((data, writer, lengthCache) => {
                 const length = lengthCache.get(data)!;
@@ -82,7 +82,7 @@ export const ScalarSerializerCompiler: {
             writer.writeBigVarint(Converter.toUnsigned64(data));
         }),
     
-    [ScalarType.UINT64]: (spec) => spec.repeated ?
+    uint64: (spec) => spec.repeated ?
         spec.packed 
             ? defineSerializer<bigint[]>((data, writer, lengthCache) => {
                 const length = lengthCache.get(data)!;
@@ -103,7 +103,7 @@ export const ScalarSerializerCompiler: {
             writer.writeBigVarint(data);
         }),
     
-    [ScalarType.INT32]: (spec) => spec.repeated ?
+    int32: (spec) => spec.repeated ?
         spec.packed 
             ? defineSerializer<number[]>((data, writer, lengthCache) => {
                 const length = lengthCache.get(data)!;
@@ -124,7 +124,7 @@ export const ScalarSerializerCompiler: {
             writer.writeVarint(Converter.toUnsigned32(data));
         }),
 
-    [ScalarType.FIXED64]: (spec) => spec.repeated ?
+    fixed64: (spec) => spec.repeated ?
         spec.packed 
             ? defineSerializer<bigint[]>((data, writer) => {
                 const length = data.length * Fixed64Size;
@@ -145,7 +145,7 @@ export const ScalarSerializerCompiler: {
             writer.writeFixed64(data);
         }),
 
-    [ScalarType.FIXED32]: (spec) => spec.repeated ?
+    fixed32: (spec) => spec.repeated ?
         spec.packed 
             ? defineSerializer<number[]>((data, writer) => {
                 const length = data.length * Fixed32Size;
@@ -166,7 +166,7 @@ export const ScalarSerializerCompiler: {
             writer.writeFixed32(data);
         }),
 
-    [ScalarType.BOOL]: (spec) => spec.repeated ?
+    bool: (spec) => spec.repeated ?
         spec.packed 
             ? defineSerializer<boolean[]>((data, writer) => {
                 const length = data.length;
@@ -187,7 +187,7 @@ export const ScalarSerializerCompiler: {
             writer.writeRawByte(data ? 1 : 0);
         }),
     
-    [ScalarType.STRING]: (spec) => spec.repeated
+    string: (spec) => spec.repeated
         ? defineSerializer<string[]>((data, writer) => {
             for (const value of data) {
                 writer.writeVarint(spec[kTag]);
@@ -201,7 +201,7 @@ export const ScalarSerializerCompiler: {
             writer.writeRawBytes(Buffer.from(data));
         }),
 
-    [ScalarType.BYTES]: (spec) => spec.repeated
+    bytes: (spec) => spec.repeated
         ? defineSerializer<Buffer[]>((data, writer) => {
             for (const value of data) {
                 writer.writeVarint(spec[kTag]);
@@ -215,7 +215,7 @@ export const ScalarSerializerCompiler: {
             writer.writeRawBytes(data);
         }),
     
-    [ScalarType.UINT32]: (spec) => spec.repeated ?
+    uint32: (spec) => spec.repeated ?
         spec.packed 
             ? defineSerializer<number[]>((data, writer, lengthCache) => {
                 const length = lengthCache.get(data)!;
@@ -236,7 +236,7 @@ export const ScalarSerializerCompiler: {
             writer.writeVarint(Converter.toUnsigned32(data));
         }),
     
-    [ScalarType.SFIXED32]: (spec) => spec.repeated ?
+    sfixed32: (spec) => spec.repeated ?
         spec.packed 
             ? defineSerializer<number[]>((data, writer) => {
                 const length = data.length * Fixed32Size;
@@ -257,7 +257,7 @@ export const ScalarSerializerCompiler: {
             writer.writeFixed32(Converter.zigzagEncode32(data));
         }),
     
-    [ScalarType.SFIXED64]: (spec) => spec.repeated ?
+    sfixed64: (spec) => spec.repeated ?
         spec.packed 
             ? defineSerializer<bigint[]>((data, writer) => {
                 const length = data.length * Fixed64Size;
@@ -278,7 +278,7 @@ export const ScalarSerializerCompiler: {
             writer.writeFixed64(Converter.zigzagEncode64(data));
         }),
     
-    [ScalarType.SINT32]: (spec) => spec.repeated ?
+    sint32: (spec) => spec.repeated ?
         spec.packed 
             ? defineSerializer<number[]>((data, writer) => {
                 const length = data.length * Fixed32Size;
@@ -299,7 +299,7 @@ export const ScalarSerializerCompiler: {
             writer.writeVarint(Converter.zigzagEncode32(data));
         }),
     
-    [ScalarType.SINT64]: (spec) => spec.repeated ?
+    sint64: (spec) => spec.repeated ?
         spec.packed 
             ? defineSerializer<bigint[]>((data, writer, lengthCache) => {
                 const length = lengthCache.get(data)!;

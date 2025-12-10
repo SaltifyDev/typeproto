@@ -1,6 +1,6 @@
 import { CodedReader } from './CodedReader';
 import { CodedWriter } from './CodedWriter';
-import { ProtoDeserializer, ScarlarDeserializerCompiler } from './ProtoDeserializer';
+import { ProtoDeserializer, ScalarDeserializerCompiler } from './ProtoDeserializer';
 import { InferProtoSpec, InferProtoSpecInput, kTag, kTagLength, ProtoFieldType, ProtoSpec } from './ProtoField';
 import { ProtoSerializer, ScalarSerializerCompiler } from './ProtoSerializer';
 import { ScalarTypeDefaultValue } from './ScalarType';
@@ -110,7 +110,7 @@ export class ProtoMessage<const T extends ProtoModel> {
                 }
                 this.fieldDeserializers.set(
                     spec.fieldNumber,
-                    ScarlarDeserializerCompiler[type](
+                    ScalarDeserializerCompiler[type](
                         key,
                         // @ts-ignore
                         spec

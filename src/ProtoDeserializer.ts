@@ -7,10 +7,10 @@ import { DoubleSize, Fixed32Size, Fixed64Size, FloatSize } from './Constants';
 
 export type ProtoDeserializer = (draft: any, reader: CodedReader, wireType: WireType) => void;
 
-export const ScarlarDeserializerCompiler: {
+export const ScalarDeserializerCompiler: {
     [K in ScalarType]: (key: string, spec: ProtoSpec<K, boolean, boolean>) => ProtoDeserializer;
 } = {
-    [ScalarType.DOUBLE]: (key, spec) => spec.repeated
+    double: (key, spec) => spec.repeated
         ? (draft, reader, wireType) => {
             if (wireType === WireType.LengthDelimited) { // packed
                 const count = reader.readVarint() / DoubleSize;
@@ -25,7 +25,7 @@ export const ScarlarDeserializerCompiler: {
             draft[key] = reader.readDouble();
         },
 
-    [ScalarType.FLOAT]: (key, spec) => spec.repeated
+    float: (key, spec) => spec.repeated
         ? (draft, reader, wireType) => {
             if (wireType === WireType.LengthDelimited) { // packed
                 const count = reader.readVarint() / FloatSize;
@@ -40,7 +40,7 @@ export const ScarlarDeserializerCompiler: {
             draft[key] = reader.readFloat();
         },
 
-    [ScalarType.INT64]: (key, spec) => spec.repeated
+    int64: (key, spec) => spec.repeated
         ? (draft, reader, wireType) => {
             if (wireType === WireType.LengthDelimited) { // packed
                 const length = reader.readVarint();
@@ -56,7 +56,7 @@ export const ScarlarDeserializerCompiler: {
             draft[key] = Converter.toSigned64(reader.readVarintToBigint());
         },
 
-    [ScalarType.UINT64]: (key, spec) => spec.repeated
+    uint64: (key, spec) => spec.repeated
         ? (draft, reader, wireType) => {
             if (wireType === WireType.LengthDelimited) { // packed
                 const length = reader.readVarint();
@@ -72,7 +72,7 @@ export const ScarlarDeserializerCompiler: {
             draft[key] = reader.readVarintToBigint();
         },
 
-    [ScalarType.INT32]: (key, spec) => spec.repeated
+    int32: (key, spec) => spec.repeated
         ? (draft, reader, wireType) => {
             if (wireType === WireType.LengthDelimited) { // packed
                 const length = reader.readVarint();
@@ -88,7 +88,7 @@ export const ScarlarDeserializerCompiler: {
             draft[key] = Converter.toSigned32(reader.readVarint());
         },
 
-    [ScalarType.FIXED64]: (key, spec) => spec.repeated
+    fixed64: (key, spec) => spec.repeated
         ? (draft, reader, wireType) => {
             if (wireType === WireType.LengthDelimited) { // packed
                 const count = reader.readVarint() / Fixed64Size;
@@ -103,7 +103,7 @@ export const ScarlarDeserializerCompiler: {
             draft[key] = reader.readFixed64();
         },
 
-    [ScalarType.FIXED32]: (key, spec) => spec.repeated
+    fixed32: (key, spec) => spec.repeated
         ? (draft, reader, wireType) => {
             if (wireType === WireType.LengthDelimited) { // packed
                 const count = reader.readVarint() / Fixed32Size;
@@ -118,7 +118,7 @@ export const ScarlarDeserializerCompiler: {
             draft[key] = reader.readFixed32();
         },
 
-    [ScalarType.BOOL]: (key, spec) => spec.repeated
+    bool: (key, spec) => spec.repeated
         ? (draft, reader, wireType) => {
             if (wireType === WireType.LengthDelimited) { // packed
                 const count = reader.readVarint();
@@ -133,7 +133,7 @@ export const ScarlarDeserializerCompiler: {
             draft[key] = reader.readVarint() !== 0;
         },
     
-    [ScalarType.STRING]: (key, spec) => spec.repeated
+    string: (key, spec) => spec.repeated
         ? (draft, reader) => {
             draft[key].push(reader.readBytes(reader.readVarint()).toString());
         }
@@ -141,7 +141,7 @@ export const ScarlarDeserializerCompiler: {
             draft[key] = reader.readBytes(reader.readVarint()).toString();
         },
 
-    [ScalarType.BYTES]: (key, spec) => spec.repeated
+    bytes: (key, spec) => spec.repeated
         ? (draft, reader) => {
             draft[key].push(reader.readBytes(reader.readVarint()));
         }
@@ -149,7 +149,7 @@ export const ScarlarDeserializerCompiler: {
             draft[key] = reader.readBytes(reader.readVarint());
         },
     
-    [ScalarType.UINT32]: (key, spec) => spec.repeated
+    uint32: (key, spec) => spec.repeated
         ? (draft, reader, wireType) => {
             if (wireType === WireType.LengthDelimited) { // packed
                 const length = reader.readVarint();
@@ -165,7 +165,7 @@ export const ScarlarDeserializerCompiler: {
             draft[key] = reader.readVarint();
         },
     
-    [ScalarType.SFIXED32]: (key, spec) => spec.repeated
+    sfixed32: (key, spec) => spec.repeated
         ? (draft, reader, wireType) => {
             if (wireType === WireType.LengthDelimited) { // packed
                 const count = reader.readVarint() / Fixed32Size;
@@ -180,7 +180,7 @@ export const ScarlarDeserializerCompiler: {
             draft[key] = Converter.zigzagDecode32(reader.readFixed32());
         },
 
-    [ScalarType.SFIXED64]: (key, spec) => spec.repeated
+    sfixed64: (key, spec) => spec.repeated
         ? (draft, reader, wireType) => {
             if (wireType === WireType.LengthDelimited) { // packed
                 const count = reader.readVarint() / Fixed64Size;
@@ -195,7 +195,7 @@ export const ScarlarDeserializerCompiler: {
             draft[key] = Converter.zigzagDecode64(reader.readFixed64());
         },
     
-    [ScalarType.SINT32]: (key, spec) => spec.repeated
+    sint32: (key, spec) => spec.repeated
         ? (draft, reader, wireType) => {
             if (wireType === WireType.LengthDelimited) { // packed
                 const length = reader.readVarint();
@@ -211,7 +211,7 @@ export const ScarlarDeserializerCompiler: {
             draft[key] = Converter.zigzagDecode32(reader.readVarint());
         },
     
-    [ScalarType.SINT64]: (key, spec) => spec.repeated
+    sint64: (key, spec) => spec.repeated
         ? (draft, reader, wireType) => {
             if (wireType === WireType.LengthDelimited) { // packed
                 const length = reader.readVarint();

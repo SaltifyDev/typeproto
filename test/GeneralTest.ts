@@ -1,21 +1,19 @@
-import { ProtoField } from '../src/ProtoField';
-import { ProtoMessage } from '../src/ProtoMessage';
-import { ScalarType } from '../src/ScalarType';
+import { ProtoField, ProtoMessage } from '../src';
 
 const TestMessage = ProtoMessage.of({
-    uint32Field: ProtoField(1, ScalarType.UINT32, false, false),
-    fixed32Field: ProtoField(2, ScalarType.FIXED32, false, false),
-    sint32Field: ProtoField(3, ScalarType.SINT32, false, false),
-    boolField: ProtoField(4, ScalarType.BOOL, false, false),
-    stringField: ProtoField(5, ScalarType.STRING, false, false),
+    uint32Field: ProtoField(1, 'uint32', false, false),
+    fixed32Field: ProtoField(2, 'fixed32', false, false),
+    sint32Field: ProtoField(3, 'sint32', false, false),
+    boolField: ProtoField(4, 'bool', false, false),
+    stringField: ProtoField(5, 'string', false, false),
     nestedMessageField: ProtoField(6, () => ({
-        nestedField: ProtoField(1, ScalarType.UINT32, false, false),
+        nestedField: ProtoField(1, 'uint32', false, false),
     }), false, false),
     repeatedMessageField: ProtoField(7, () => ({
-        nestedField: ProtoField(1, ScalarType.UINT32, false, false),
+        nestedField: ProtoField(1, 'uint32', false, false),
     }), false, true),
-    repeatedPackedField: ProtoField(8, ScalarType.UINT32, false, true, true),
-    repeatedNotPackedField: ProtoField(9, ScalarType.UINT32, false, true, false),
+    repeatedPackedField: ProtoField(8, 'uint32', false, true, true),
+    repeatedNotPackedField: ProtoField(9, 'uint32', false, true, false),
 });
 
 const encoded = TestMessage.encode({
