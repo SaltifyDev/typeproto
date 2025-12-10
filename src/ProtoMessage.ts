@@ -154,9 +154,7 @@ export class ProtoMessage<const T extends ProtoModel> {
     private createDraft(): InferProtoModel<T> {
         const draft: any = {};
         for (const [key, valueOrSupplier] of this.fieldDefaultValues) {
-            if (valueOrSupplier !== undefined) {
-                draft[key] = typeof valueOrSupplier === 'function' ? valueOrSupplier() : valueOrSupplier;
-            }
+            draft[key] = typeof valueOrSupplier === 'function' ? valueOrSupplier() : valueOrSupplier;
         }
         return draft;
     }
