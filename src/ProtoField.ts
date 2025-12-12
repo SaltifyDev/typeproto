@@ -24,6 +24,12 @@ export interface ProtoSpec<
     [kTagLength]: number;
 }
 
+export type ProtoFieldModifier = 'optional' | 'repeated';
+
+export type ProtoFieldOptions<M extends ProtoFieldModifier = ProtoFieldModifier> = M extends 'repeated' ? {
+    packed?: boolean;
+} : never;
+
 export type InferProtoSpec<Spec> = Spec extends ProtoSpec<infer T, infer O, infer R>
     ? R extends true
         ? O extends true
@@ -98,50 +104,41 @@ const ScalarTypeToWireType: {
 export function ProtoField<T extends ProtoFieldType>(
     fieldNumber: number,
     type: T,
-    optional?: false,
-    repeated?: false,
 ): ProtoSpec<T, false, false>;
 export function ProtoField<T extends ProtoFieldType>(
     fieldNumber: number,
     type: T,
-    optional: true,
-    repeated?: false, // repeated must be false if optional is true
+    modifier: 'optional',
 ): ProtoSpec<T, true, false>;
 export function ProtoField<T extends ProtoFieldType>(
     fieldNumber: number,
     type: T,
-    optional: false, // optional must be false if repeated is true
-    repeated: true,
-    packed?: boolean
+    modifier: 'repeated',
+    options?: ProtoFieldOptions<'repeated'>,
 ): ProtoSpec<T, false, true>;
 
 export function ProtoField<T extends ProtoFieldType>(
     fieldNumber: number,
     type: T,
-    optional: boolean = false,
-    repeated: boolean = false,
-    packed?: boolean,
+    modifier?: ProtoFieldModifier,
+    options?: ProtoFieldOptions,
 ): ProtoSpec<T, boolean, boolean> {
-    if (repeated && optional) {
-        throw new Error('Repeated fields cannot be optional');
-    }
-
-    if (repeated && packed === undefined) {
-        packed = true;
+    if (modifier === 'repeated' && options?.packed === undefined) {
+        options = { ...options, packed: true };
     }
 
     const tag = Converter.tag(
         fieldNumber,
         typeof type === 'function' ? WireType.LengthDelimited :
-            packed ? WireType.LengthDelimited : ScalarTypeToWireType[type]
+            options?.packed ? WireType.LengthDelimited : ScalarTypeToWireType[type]
     );
 
     return {
         fieldNumber,
         type,
-        optional: optional ?? false,
-        repeated: repeated ?? false,
-        packed,
+        optional: modifier === 'optional',
+        repeated: modifier === 'repeated',
+        packed: options?.packed,
         [kTag]: tag,
         [kTagLength]: SizeOf.varint32(tag),
     };

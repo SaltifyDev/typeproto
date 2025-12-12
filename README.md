@@ -15,22 +15,18 @@ import { ProtoField, ProtoMessage } from '@saltify/typeproto';
 
 const TestMessage = ProtoMessage.of({
     uint32Field: ProtoField(1, 'uint32'),
-    // The first boolean indicates whether the field is optional
-    fixed32Field: ProtoField(2, 'fixed32', false),
-    sint32Field: ProtoField(3, 'sint32', false),
-    boolField: ProtoField(4, 'bool', false),
-    stringField: ProtoField(5, 'string', false),
-    // Define nested messages in a lambda
+    fixed32Field: ProtoField(2, 'fixed32'),
+    sint32Field: ProtoField(3, 'sint32'),
+    boolField: ProtoField(4, 'bool'),
+    stringField: ProtoField(5, 'string'),
     nestedMessageField: ProtoField(6, () => ({
         nestedField: ProtoField(1, 'uint32'),
-    }), false, false),
-    // The second boolean indicates whether the field is repeated
+    })),
     repeatedMessageField: ProtoField(7, () => ({
         nestedField: ProtoField(1, 'uint32'),
-    }), false, true),
-    // The third boolean indicates whether the repeated field is packed
-    repeatedPackedField: ProtoField(8, 'uint32', false, true, true),
-    repeatedNotPackedField: ProtoField(9, 'uint32', false, true, false),
+    }), 'repeated'),
+    repeatedPackedField: ProtoField(8, 'uint32', 'repeated'),
+    repeatedNotPackedField: ProtoField(9, 'uint32', 'repeated', { packed: false }),
 });
 ```
 
