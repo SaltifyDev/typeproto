@@ -11,9 +11,9 @@ const Message = ProtoMessage.of({
     })),
     repeatedMessageField: ProtoField(7, () => ({
         nestedField: ProtoField(1, 'uint32'),
-    }), false, true),
-    repeatedPackedField: ProtoField(8, 'uint32', false, true, true),
-    repeatedNotPackedField: ProtoField(9, 'uint32', false, true, false),
+    }), 'repeated'),
+    repeatedPackedField: ProtoField(8, 'uint32', 'repeated'),
+    repeatedNotPackedField: ProtoField(9, 'uint32', 'repeated', { packed: false }),
 });
 
 const sample = {
