@@ -4,11 +4,11 @@ Fast, code-first protobuf serialization library for TypeScript.
 
 **Important: The library uses `Buffer` API, which is only available in Node.js and recent versions of Deno. It is not compatible with browser environments.**
 
-## Usage
+## Basic Usage
 
 The DSL is inspired by [`@napneko/nap-proto-core`](https://npmjs.com/package/@napneko/nap-proto-core), which uses `@protobuf-ts/runtime` as the backend. The DSL describes the model in an elegant way and is still valid TypeScript code, and can be used directly for type inference. This package fully adopted this style of model representation.
 
-For example, a message can be defined as follows:
+A message can be defined as follows:
 
 ```typescript
 import { ProtoField, ProtoMessage } from '@saltify/typeproto';
@@ -46,7 +46,7 @@ const encoded = TestMessage.encode({
     },
     repeatedMessageField: [
         { nestedField: 1 },
-        { nestedField: 2 },
+        {}, // Even an empty object is valid
     ],
     repeatedPackedField: [1, 2, 3],
     repeatedNotPackedField: [4, 5, 6],
@@ -54,6 +54,46 @@ const encoded = TestMessage.encode({
 
 // The decoded message also has the correct type
 const decoded = TestMessage.decode(encoded);
+```
+
+Note that all fields are not required when you pass an object to `encode`. If a non-optional field is not provided, it will be encoded as the default value (zero / empty string / false) of the field type.
+
+## Advanced Usage
+
+### The `model` Property
+
+The `ProtoMessage` class has a property `model`, which is the model object provided to the `of` method. You can use it to get the model object, which is useful for some advanced use cases.
+
+For example, you can refer to this object when creating a new message:
+
+```typescript
+const TestMessageA = ProtoMessage.of({
+    uint32Field: ProtoField(1, 'uint32'),
+});
+
+const TestMessageB = ProtoMessage.of({
+    nestedField: ProtoField(1, () => TestMessageA.model),
+});
+// Now TestMessageB has a nested field of type TestMessageA
+```
+
+### Utility Types
+
+`InferProtoModel` and `InferProtoModelInput` are the utility types that can be used to infer output and input types from the model object. When you pass an object to `ProtoMessage<T>.encode`, it will be checked against `InferProtoModelInput<T>`; and when you decode a buffer, the result will satisfy the type `InferProtoModel<T>`. This is useful when you want to use the model object in a more generic way.
+
+Assume that you defined a message model, and want to create a list which you can push objects of the model into. You then use the list to generate a list of encoded buffers:
+
+```typescript
+const TestMessage = ProtoMessage.of({
+    uint32Field: ProtoField(1, 'uint32'),
+});
+
+const messages = InferProtoModelInput<typeof TestMessage.model>[];
+
+messages.push({ uint32Field: 1 });
+messages.push({}); // All fields are optional, so this is also valid
+
+const buffers = messages.map((msg) => TestMessage.encode(msg));
 ```
 
 ## Performance
