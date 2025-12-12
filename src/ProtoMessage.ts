@@ -27,9 +27,9 @@ export class ProtoMessage<const T extends ProtoModel> {
     private readonly fieldDefaultValues: [string, any | (() => any)][] = [];
     private readonly fieldDeserializers = new Map<number, ProtoDeserializer>();
 
-    private constructor(readonly fields: T) {
-        for (const key in fields) {
-            const spec = fields[key];
+    private constructor(readonly model: T) {
+        for (const key in model) {
+            const spec = model[key];
             const type = spec.type;
             if (typeof type === 'function') {
                 let lazyLoadModel: ProtoModel | undefined;
