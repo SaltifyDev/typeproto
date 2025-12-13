@@ -10,13 +10,13 @@ export interface ProtoModel {
     [Key: string]: ProtoSpec<ProtoFieldType, boolean, boolean>;
 }
 
-export type InferProtoModel<T extends ProtoModel> = {
+export type InferProtoModel<T extends ProtoModel | ProtoMessage<ProtoModel>> = T extends ProtoModel ? {
     [Key in keyof T]: InferProtoSpec<T[Key]>;
-};
+} : T extends ProtoMessage<infer M> ? InferProtoModel<M> : never;
 
-export type InferProtoModelInput<T extends ProtoModel> = Partial<{
+export type InferProtoModelInput<T extends ProtoModel | ProtoMessage<ProtoModel>> = T extends ProtoModel ? Partial<{
     [Key in keyof T]: InferProtoSpecInput<T[Key]>;
-}>;
+}> : T extends ProtoMessage<infer M> ? InferProtoModelInput<M> : never;
 
 export class ProtoMessage<const T extends ProtoModel> {
     private static compiledMessages = new WeakMap<ProtoModel, ProtoMessage<ProtoModel>>();
@@ -32,10 +32,16 @@ export class ProtoMessage<const T extends ProtoModel> {
             const spec = model[key];
             const type = spec.type;
             if (typeof type === 'function') {
+                const supplier = type;
                 let lazyLoadModel: ProtoModel | undefined;
                 function lazyLoad() {
                     if (lazyLoadModel === undefined) {
-                        lazyLoadModel = (<() => ProtoModel>type)();
+                        const modelOrMessage = supplier();
+                        if (modelOrMessage instanceof ProtoMessage) {
+                            lazyLoadModel = modelOrMessage.model;
+                        } else {
+                            lazyLoadModel = modelOrMessage;
+                        }
                     }
                     return lazyLoadModel;
                 }

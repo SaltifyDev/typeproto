@@ -1,11 +1,11 @@
 import { Converter } from './Converter';
-import { InferProtoModel, InferProtoModelInput, ProtoModel } from './ProtoMessage';
+import { InferProtoModel, InferProtoModelInput, ProtoMessage, ProtoModel } from './ProtoMessage';
 import { ScalarType } from './ScalarType';
 import { SizeOf } from './SizeOf';
 import { WireType } from './WireType';
 
 export type Supplier<T> = () => T;
-export type ProtoFieldType = ScalarType | Supplier<ProtoModel>;
+export type ProtoFieldType = ScalarType | Supplier<ProtoModel | ProtoMessage<ProtoModel>>;
 
 export const kTag = Symbol('Cached Tag');
 export const kTagLength = Symbol('Cached Tag Length');
@@ -39,7 +39,7 @@ export type InferProtoSpec<Spec> = Spec extends ProtoSpec<infer T, infer O, infe
         ? InferProtoSpec<ProtoSpec<T, false, false>> | undefined
         : T extends ScalarType
         ? ScalarTypeToTsType<T>
-        : T extends Supplier<infer S extends ProtoModel>
+        : T extends Supplier<infer S extends ProtoModel | ProtoMessage<ProtoModel>>
         ? InferProtoModel<S>
         : never
     : never;
@@ -51,7 +51,7 @@ export type InferProtoSpecInput<Spec> = Spec extends ProtoSpec<infer T, infer O,
             : Array<InferProtoSpecInput<ProtoSpec<T, O, false>>>
         : T extends ScalarType
         ? ScalarTypeToTsType<T>
-        : T extends Supplier<infer S extends ProtoModel>
+        : T extends Supplier<infer S extends ProtoModel | ProtoMessage<ProtoModel>>
         ? InferProtoModelInput<S>
         : never
     : never;
