@@ -6,12 +6,12 @@ const TestMessage = ProtoMessage.of({
     sint32Field: ProtoField(3, 'sint32'),
     boolField: ProtoField(4, 'bool'),
     stringField: ProtoField(5, 'string'),
-    nestedMessageField: ProtoField(6, () => ({
+    nestedMessageField: ProtoField(6, {
         nestedField: ProtoField(1, 'uint32'),
-    })),
-    repeatedMessageField: ProtoField(7, () => ({
+    }),
+    repeatedMessageField: ProtoField(7, {
         nestedField: ProtoField(1, 'uint32'),
-    }), 'repeated'),
+    }, 'repeated'),
     repeatedPackedField: ProtoField(8, 'uint32', 'repeated'),
     repeatedNotPackedField: ProtoField(9, 'uint32', 'repeated', { packed: false }),
 });
