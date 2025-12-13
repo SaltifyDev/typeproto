@@ -31,24 +31,33 @@ export class ProtoMessage<const T extends ProtoModel> {
         for (const key in model) {
             const spec = model[key];
             const type = spec.type;
-            if (typeof type === 'function') {
-                const supplier = type;
-                let lazyLoadModel: ProtoModel | undefined;
-                function lazyLoad() {
-                    if (lazyLoadModel === undefined) {
-                        const modelOrMessage = supplier();
-                        if (modelOrMessage instanceof ProtoMessage) {
-                            lazyLoadModel = modelOrMessage.model;
+            if (typeof type === 'function' || typeof type === 'object') {
+                let modelOrLazy: ProtoModel | undefined;
+                function resolveModel() {
+                    if (modelOrLazy === undefined) {
+                        if (typeof type === 'function') {
+                            const modelOrMessage = type();
+                            if (modelOrMessage instanceof ProtoMessage) {
+                                modelOrLazy = modelOrMessage.model;
+                            } else {
+                                modelOrLazy = modelOrMessage;
+                            }
+                        } else if (typeof type === 'object') {
+                            if (type instanceof ProtoMessage) {
+                                modelOrLazy = type.model;
+                            } else {
+                                modelOrLazy = type;
+                            }
                         } else {
-                            lazyLoadModel = modelOrMessage;
+                            throw new Error('Unexpected type');
                         }
                     }
-                    return lazyLoadModel;
-                }
+                    return modelOrLazy;
+                };
                 if (spec.repeated) {
                     this.fieldSizeCalculators.set(key, (data, cache) => {
                         let size = spec[kTagLength] * data.length;
-                        const message = ProtoMessage.of(lazyLoad());
+                        const message = ProtoMessage.of(resolveModel());
                         for (const item of data) {
                             const bodySize = message.calculateSerializedSize(item, cache);
                             cache.set(item, bodySize);
@@ -57,7 +66,7 @@ export class ProtoMessage<const T extends ProtoModel> {
                         return size;
                     });
                     this.fieldSerializers.set(key, (data, writer, cache) => {
-                        const message = ProtoMessage.of(lazyLoad());
+                        const message = ProtoMessage.of(resolveModel());
                         for (const item of data) {
                             const bodySize = cache.get(item)!;
                             writer.writeVarint(spec[kTag]);
@@ -67,7 +76,7 @@ export class ProtoMessage<const T extends ProtoModel> {
                     });
                     this.fieldDefaultValues.push([key, () => []]);
                     this.fieldDeserializers.set(spec.fieldNumber, (draft, reader) => {
-                        const message = ProtoMessage.of(lazyLoad());
+                        const message = ProtoMessage.of(resolveModel());
                         const item = message.createDraft();
                         const length = reader.readVarint();
                         const offset = reader.offset;
@@ -76,12 +85,12 @@ export class ProtoMessage<const T extends ProtoModel> {
                     });
                 } else {
                     this.fieldSizeCalculators.set(key, (data, cache) => {
-                        const message = ProtoMessage.of(lazyLoad());
+                        const message = ProtoMessage.of(resolveModel());
                         const bodySize = message.calculateSerializedSize(data, cache);
                         return spec[kTagLength] + SizeOf.varint32(bodySize) + bodySize;
                     });
                     this.fieldSerializers.set(key, (data, writer, cache) => {
-                        const message = ProtoMessage.of(lazyLoad());
+                        const message = ProtoMessage.of(resolveModel());
                         const bodySize = cache.get(data)!;
                         writer.writeVarint(spec[kTag]);
                         writer.writeVarint(bodySize);
@@ -91,12 +100,12 @@ export class ProtoMessage<const T extends ProtoModel> {
                         this.fieldDefaultValues.push([key, undefined]);
                     } else {
                         this.fieldDefaultValues.push([key, () => {
-                            const message = ProtoMessage.of(lazyLoad());
+                            const message = ProtoMessage.of(resolveModel());
                             return message.createDraft();
                         }]);
                     }
                     this.fieldDeserializers.set(spec.fieldNumber, (draft, reader) => {
-                        const message = ProtoMessage.of(lazyLoad());
+                        const message = ProtoMessage.of(resolveModel());
                         const item = message.createDraft();
                         const length = reader.readVarint();
                         const offset = reader.offset;

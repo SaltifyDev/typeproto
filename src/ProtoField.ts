@@ -5,7 +5,11 @@ import { SizeOf } from './SizeOf';
 import { WireType } from './WireType';
 
 export type Supplier<T> = () => T;
-export type ProtoFieldType = ScalarType | Supplier<ProtoModel | ProtoMessage<ProtoModel>>;
+export type ProtoFieldType =
+    | ScalarType
+    | ProtoModel
+    | ProtoMessage<ProtoModel>
+    | Supplier<ProtoModel | ProtoMessage<ProtoModel>>;
 
 export const kTag = Symbol('Cached Tag');
 export const kTagLength = Symbol('Cached Tag Length');
@@ -39,6 +43,8 @@ export type InferProtoSpec<Spec> = Spec extends ProtoSpec<infer T, infer O, infe
         ? InferProtoSpec<ProtoSpec<T, false, false>> | undefined
         : T extends ScalarType
         ? ScalarTypeToTsType<T>
+        : T extends ProtoModel | ProtoMessage<ProtoModel>
+        ? InferProtoModel<T>
         : T extends Supplier<infer S extends ProtoModel | ProtoMessage<ProtoModel>>
         ? InferProtoModel<S>
         : never
@@ -51,6 +57,8 @@ export type InferProtoSpecInput<Spec> = Spec extends ProtoSpec<infer T, infer O,
             : Array<InferProtoSpecInput<ProtoSpec<T, O, false>>>
         : T extends ScalarType
         ? ScalarTypeToTsType<T>
+        : T extends ProtoModel | ProtoMessage<ProtoModel>
+        ? InferProtoModelInput<T>
         : T extends Supplier<infer S extends ProtoModel | ProtoMessage<ProtoModel>>
         ? InferProtoModelInput<S>
         : never
@@ -129,7 +137,7 @@ export function ProtoField<T extends ProtoFieldType>(
 
     const tag = Converter.tag(
         fieldNumber,
-        typeof type === 'function' ? WireType.LengthDelimited :
+        typeof type === 'function' || typeof type === 'object' ? WireType.LengthDelimited :
             options?.packed ? WireType.LengthDelimited : ScalarTypeToWireType[type]
     );
 
