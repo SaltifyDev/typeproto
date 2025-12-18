@@ -1,6 +1,6 @@
 import { ScalarType } from './ScalarType';
 import { CodedReader } from './CodedReader';
-import { ProtoSpec } from './ProtoField';
+import { ProtoSpec } from './ProtoSpec';
 import { Converter } from './Converter';
 import { WireType } from './WireType';
 import { DoubleSize, Fixed32Size, Fixed64Size, FloatSize } from './Constants';

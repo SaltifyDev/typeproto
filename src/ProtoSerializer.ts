@@ -1,7 +1,7 @@
 import { CodedWriter } from './CodedWriter';
 import { DoubleSize, Fixed32Size, Fixed64Size, FloatSize } from './Constants';
 import { Converter } from './Converter';
-import { kTag, ProtoFieldType, ProtoSpec } from './ProtoField';
+import { kTag, ProtoFieldType, ProtoSpec } from './ProtoSpec';
 import { ScalarType } from './ScalarType';
 
 export type ProtoSerializer<T = any> = T extends boolean ? (data: boolean, writer: CodedWriter) => void
@@ -16,9 +16,9 @@ function defineSerializer<T>(s: ProtoSerializer<T>): ProtoSerializer<T> {
     return s;
 }
 
-export const ScalarSerializerCompiler: {
-    [K in ScalarType]: (spec: ProtoSpec<ProtoFieldType, boolean, boolean>) => ProtoSerializer<any>;
-} = {
+export const ScalarSerializerCompiler: Record<
+    ScalarType, (spec: ProtoSpec<ProtoFieldType, boolean, boolean>) => ProtoSerializer<any>
+> = {
     double: (spec) => spec.repeated ?
         spec.packed 
             ? defineSerializer<number[]>((data, writer) => {

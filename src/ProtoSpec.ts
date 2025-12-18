@@ -1,8 +1,5 @@
-import { Converter } from './Converter';
 import { InferProtoModel, InferProtoModelInput, ProtoMessage, ProtoModel } from './ProtoMessage';
 import { ScalarType } from './ScalarType';
-import { SizeOf } from './SizeOf';
-import { WireType } from './WireType';
 
 export type Supplier<T> = () => T;
 export type ProtoFieldType =
@@ -87,67 +84,3 @@ export type ScalarTypeToTsType<T extends ScalarType> = T extends
     : T extends 'bytes'
     ? Buffer
     : never;
-
-const ScalarTypeToWireType: {
-    [K in ScalarType]: WireType;
-} = {
-    double: WireType.Fixed64,
-    float: WireType.Fixed32,
-    int64: WireType.Varint,
-    uint64: WireType.Varint,
-    int32: WireType.Varint,
-    fixed64: WireType.Fixed64,
-    fixed32: WireType.Fixed32,
-    bool: WireType.Varint,
-    string: WireType.LengthDelimited,
-    bytes: WireType.LengthDelimited,
-    uint32: WireType.Varint,
-    sfixed32: WireType.Fixed32,
-    sfixed64: WireType.Fixed64,
-    sint32: WireType.Varint,
-    sint64: WireType.Varint,
-};
-
-// Signature overloads, for better IntelliSense experience
-export function ProtoField<T extends ProtoFieldType>(
-    fieldNumber: number,
-    type: T,
-): ProtoSpec<T, false, false>;
-export function ProtoField<T extends ProtoFieldType>(
-    fieldNumber: number,
-    type: T,
-    modifier: 'optional',
-): ProtoSpec<T, true, false>;
-export function ProtoField<T extends ProtoFieldType>(
-    fieldNumber: number,
-    type: T,
-    modifier: 'repeated',
-    options?: ProtoFieldOptions<'repeated'>,
-): ProtoSpec<T, false, true>;
-
-export function ProtoField<T extends ProtoFieldType>(
-    fieldNumber: number,
-    type: T,
-    modifier?: ProtoFieldModifier,
-    options?: ProtoFieldOptions,
-): ProtoSpec<T, boolean, boolean> {
-    if (modifier === 'repeated' && options?.packed === undefined) {
-        options = { ...options, packed: true };
-    }
-
-    const tag = Converter.tag(
-        fieldNumber,
-        typeof type === 'function' || typeof type === 'object' ? WireType.LengthDelimited :
-            options?.packed ? WireType.LengthDelimited : ScalarTypeToWireType[type]
-    );
-
-    return {
-        fieldNumber,
-        type,
-        optional: modifier === 'optional',
-        repeated: modifier === 'repeated',
-        packed: options?.packed,
-        [kTag]: tag,
-        [kTagLength]: SizeOf.varint32(tag),
-    };
-}

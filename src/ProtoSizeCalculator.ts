@@ -1,6 +1,6 @@
 import { DoubleSize, Fixed32Size, Fixed64Size, FloatSize } from './Constants';
 import { Converter } from './Converter';
-import { kTagLength, ProtoFieldType, ProtoSpec } from './ProtoField';
+import { kTagLength, ProtoFieldType, ProtoSpec } from './ProtoSpec';
 import { ScalarType } from './ScalarType';
 
 const VARINT32_BYTE_2 = 0x80;
@@ -17,6 +17,30 @@ const VARINT64_BYTE_7 = BigInt(1) << BigInt(42);
 const VARINT64_BYTE_8 = BigInt(1) << BigInt(49);
 const VARINT64_BYTE_9 = BigInt(1) << BigInt(56);
 const VARINT64_BYTE_10 = BigInt(1) << BigInt(63);
+
+export namespace SizeOf {
+    export function varint32(value: number): number {
+        value >>>= 0;
+        if (value < VARINT32_BYTE_2) return 1;
+        if (value < VARINT32_BYTE_3) return 2;
+        if (value < VARINT32_BYTE_4) return 3;
+        if (value < VARINT32_BYTE_5) return 4;
+        return 5;
+    }
+
+    export function varint64(value: bigint): number {
+        if (value < VARINT64_BYTE_2) return 1;
+        if (value < VARINT64_BYTE_3) return 2;
+        if (value < VARINT64_BYTE_4) return 3;
+        if (value < VARINT64_BYTE_5) return 4;
+        if (value < VARINT64_BYTE_6) return 5;
+        if (value < VARINT64_BYTE_7) return 6;
+        if (value < VARINT64_BYTE_8) return 7;
+        if (value < VARINT64_BYTE_9) return 8;
+        if (value < VARINT64_BYTE_10) return 9;
+        return 10;
+    }
+}
 
 type NumberMapper = (value: number) => number;
 type BigintMapper = (value: bigint) => bigint;
@@ -58,36 +82,12 @@ function sumLengthDelimited<T>(data: readonly T[], sizeOfItem: (item: T) => numb
     return total;
 }
 
-export class SizeOf {
-    static varint32(value: number): number {
-        value >>>= 0;
-        if (value < VARINT32_BYTE_2) return 1;
-        if (value < VARINT32_BYTE_3) return 2;
-        if (value < VARINT32_BYTE_4) return 3;
-        if (value < VARINT32_BYTE_5) return 4;
-        return 5;
-    }
-
-    static varint64(value: bigint): number {
-        if (value < VARINT64_BYTE_2) return 1;
-        if (value < VARINT64_BYTE_3) return 2;
-        if (value < VARINT64_BYTE_4) return 3;
-        if (value < VARINT64_BYTE_5) return 4;
-        if (value < VARINT64_BYTE_6) return 5;
-        if (value < VARINT64_BYTE_7) return 6;
-        if (value < VARINT64_BYTE_8) return 7;
-        if (value < VARINT64_BYTE_9) return 8;
-        if (value < VARINT64_BYTE_10) return 9;
-        return 10;
-    }
-}
-
-export type SizeCalculator = (data: any, cache: WeakMap<object, number>) => number;
+export type ProtoSizeCalculator = (data: any, cache: WeakMap<object, number>) => number;
 
 // Set cache for repeated, packed, varint fields
-export const ScalarSizeCalculatorCompiler: {
-    [K in ScalarType]: (spec: ProtoSpec<ProtoFieldType, boolean, boolean>) => SizeCalculator;
-} = {
+export const ScalarSizeCalculatorCompiler: Record<
+    ScalarType, (spec: ProtoSpec<ProtoFieldType, boolean, boolean>) => ProtoSizeCalculator
+> = {
     double: (spec) => spec.repeated ?
         spec.packed
             ? (data: number[]) => {

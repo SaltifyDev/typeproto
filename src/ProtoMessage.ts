@@ -1,27 +1,42 @@
 import { CodedReader } from './CodedReader';
 import { CodedWriter } from './CodedWriter';
 import { ProtoDeserializer, ScalarDeserializerCompiler } from './ProtoDeserializer';
-import { InferProtoSpec, InferProtoSpecInput, kTag, kTagLength, ProtoFieldType, ProtoSpec } from './ProtoField';
+import {
+    InferProtoSpec,
+    InferProtoSpecInput,
+    kTag,
+    kTagLength,
+    ProtoFieldModifier,
+    ProtoFieldOptions,
+    ProtoFieldType,
+    ProtoSpec,
+} from './ProtoSpec';
 import { ProtoSerializer, ScalarSerializerCompiler } from './ProtoSerializer';
-import { ScalarTypeDefaultValue } from './ScalarType';
-import { ScalarSizeCalculatorCompiler, SizeCalculator, SizeOf } from './SizeOf';
+import { ScalarType, ScalarTypeDefaultValue } from './ScalarType';
+import { ScalarSizeCalculatorCompiler, ProtoSizeCalculator, SizeOf } from './ProtoSizeCalculator';
+import { WireType } from './WireType';
+import { Converter } from './Converter';
 
-export interface ProtoModel {
-    [Key: string]: ProtoSpec<ProtoFieldType, boolean, boolean>;
-}
+export interface ProtoModel extends Record<string, ProtoSpec<ProtoFieldType, boolean, boolean>> {}
 
-export type InferProtoModel<T extends ProtoModel | ProtoMessage<ProtoModel>> = T extends ProtoModel ? {
-    [Key in keyof T]: InferProtoSpec<T[Key]>;
-} : T extends ProtoMessage<infer M> ? InferProtoModel<M> : never;
+export type InferProtoModel<T extends ProtoModel | ProtoMessage<ProtoModel>> =
+    T extends ProtoModel
+    ? { [Key in keyof T]: InferProtoSpec<T[Key]> }
+    : T extends ProtoMessage<infer M>
+    ? InferProtoModel<M>
+    : never;
 
-export type InferProtoModelInput<T extends ProtoModel | ProtoMessage<ProtoModel>> = T extends ProtoModel ? Partial<{
-    [Key in keyof T]: InferProtoSpecInput<T[Key]>;
-}> : T extends ProtoMessage<infer M> ? InferProtoModelInput<M> : never;
+export type InferProtoModelInput<T extends ProtoModel | ProtoMessage<ProtoModel>> =
+    T extends ProtoModel
+    ? Partial<{ [Key in keyof T]: InferProtoSpecInput<T[Key]> }>
+    : T extends ProtoMessage<infer M>
+    ? InferProtoModelInput<M>
+    : never;
 
 export class ProtoMessage<const T extends ProtoModel> {
     private static compiledMessages = new WeakMap<ProtoModel, ProtoMessage<ProtoModel>>();
 
-    private readonly fieldSizeCalculators = new Map<string, SizeCalculator>();
+    private readonly fieldSizeCalculators = new Map<string, ProtoSizeCalculator>();
     private readonly fieldSerializers = new Map<string, ProtoSerializer>();
 
     private readonly fieldDefaultValues: [string, any | (() => any)][] = [];
@@ -53,7 +68,7 @@ export class ProtoMessage<const T extends ProtoModel> {
                         }
                     }
                     return modelOrLazy;
-                };
+                }
                 if (spec.repeated) {
                     this.fieldSizeCalculators.set(key, (data, cache) => {
                         let size = spec[kTagLength] * data.length;
@@ -209,4 +224,65 @@ export class ProtoMessage<const T extends ProtoModel> {
         }
         return message as ProtoMessage<T>;
     }
+}
+
+const ScalarTypeToWireType: Record<ScalarType, WireType> = {
+    double: WireType.Fixed64,
+    float: WireType.Fixed32,
+    int64: WireType.Varint,
+    uint64: WireType.Varint,
+    int32: WireType.Varint,
+    fixed64: WireType.Fixed64,
+    fixed32: WireType.Fixed32,
+    bool: WireType.Varint,
+    string: WireType.LengthDelimited,
+    bytes: WireType.LengthDelimited,
+    uint32: WireType.Varint,
+    sfixed32: WireType.Fixed32,
+    sfixed64: WireType.Fixed64,
+    sint32: WireType.Varint,
+    sint64: WireType.Varint,
+};
+
+export function ProtoField<T extends ProtoFieldType>(
+    fieldNumber: number,
+    type: T
+): ProtoSpec<T, false, false>;
+export function ProtoField<T extends ProtoFieldType>(
+    fieldNumber: number,
+    type: T,
+    modifier: 'optional'
+): ProtoSpec<T, true, false>;
+export function ProtoField<T extends ProtoFieldType>(
+    fieldNumber: number,
+    type: T,
+    modifier: 'repeated',
+    options?: ProtoFieldOptions<'repeated'>
+): ProtoSpec<T, false, true>;
+export function ProtoField<T extends ProtoFieldType>(
+    fieldNumber: number,
+    type: T,
+    modifier?: ProtoFieldModifier,
+    options?: ProtoFieldOptions
+): ProtoSpec<T, boolean, boolean> {
+    if (modifier === 'repeated' && options?.packed === undefined) {
+        options = { ...options, packed: true };
+    }
+    const tag = Converter.tag(
+        fieldNumber,
+        typeof type === 'function' || typeof type === 'object'
+            ? WireType.LengthDelimited
+            : options?.packed
+            ? WireType.LengthDelimited
+            : ScalarTypeToWireType[type]
+    );
+    return {
+        fieldNumber,
+        type,
+        optional: modifier === 'optional',
+        repeated: modifier === 'repeated',
+        packed: options?.packed,
+        [kTag]: tag,
+        [kTagLength]: SizeOf.varint32(tag),
+    };
 }

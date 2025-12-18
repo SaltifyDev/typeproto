@@ -1,4 +1,4 @@
-import { ScalarTypeToTsType } from './ProtoField';
+import { ScalarTypeToTsType } from './ProtoSpec';
 
 export type ScalarType =
     | 'double'
