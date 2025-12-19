@@ -18,7 +18,7 @@ export type ScalarType =
     | 'sint64';
 
 export const ScalarTypeDefaultValue: {
-    [K in ScalarType]: ScalarTypeToTsType<K> | (() => ScalarTypeToTsType<K>);
+    [K in ScalarType]: ScalarTypeToTsType<K>;
 } = {
     double: 0,
     float: 0,
@@ -29,7 +29,7 @@ export const ScalarTypeDefaultValue: {
     fixed32: 0,
     bool: false,
     string: '',
-    bytes: () => Buffer.alloc(0),
+    bytes: Buffer.alloc(0),
     uint32: 0,
     sfixed32: 0,
     sfixed64: BigInt(0),
