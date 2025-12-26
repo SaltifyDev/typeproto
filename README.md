@@ -131,3 +131,7 @@ The efficiency of this package comes from the fact that it "compiles" the model 
 ## Special Thanks
 
 The DSL is inspired by [`@napneko/nap-proto-core`](https://npmjs.com/package/@napneko/nap-proto-core), which uses `@protobuf-ts/runtime` as the backend. The DSL describes the model in an elegant way and is still valid TypeScript code, and can be used directly for type inference. This package fully adopted this style of model representation.
+
+## See Also
+
+- [Related article (Chinese)](https://wesley-young.github.io/2025-12-26-code-first-protobuf-framework-vol-1) that explains the design and implementation of this project
